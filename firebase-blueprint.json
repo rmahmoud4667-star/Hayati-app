@@ -1,0 +1,212 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "displayName", "createdAt"]
+    },
+    "WorkTask": {
+      "title": "WorkTask",
+      "description": "A professional work task",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "priority": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+        "dueDate": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },
+        "isCompleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "dueDate", "isCompleted", "createdAt"]
+    },
+    "FinancialTransaction": {
+      "title": "FinancialTransaction",
+      "description": "Income or expense record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["INCOME", "EXPENSE"] },
+        "amount": { "type": "number" },
+        "date": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "amount", "date", "category", "createdAt"]
+    },
+    "UtilityBill": {
+      "title": "UtilityBill",
+      "description": "Household utility bill",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "billNumber": { "type": "string" },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "string" },
+        "isPaid": { "type": "boolean" },
+        "paidDate": { "type": "string" },
+        "iconName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "amount", "dueDate", "isPaid", "createdAt"]
+    },
+    "ShoppingItem": {
+      "title": "ShoppingItem",
+      "description": "Grocery or household shopping item",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "quantity": { "type": "string" },
+        "estimatedPrice": { "type": "number" },
+        "isPurchased": { "type": "boolean" },
+        "category": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "isPurchased", "createdAt"]
+    },
+    "ChildProfile": {
+      "title": "ChildProfile",
+      "description": "Child education profile",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "grade": { "type": "string" },
+        "school": { "type": "string" },
+        "avatarEmoji": { "type": "string" },
+        "subjects": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "grade", "createdAt"]
+    },
+    "Homework": {
+      "title": "Homework",
+      "description": "Child school homework assignment",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "childId": { "type": "string" },
+        "childName": { "type": "string" },
+        "subject": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "childId", "subject", "title", "dueDate", "isCompleted", "createdAt"]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Child school exam schedule",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "childId": { "type": "string" },
+        "childName": { "type": "string" },
+        "subject": { "type": "string" },
+        "title": { "type": "string" },
+        "examDate": { "type": "string" },
+        "maxScore": { "type": "integer" },
+        "scoreAchieved": { "type": "integer" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "childId", "subject", "title", "examDate", "createdAt"]
+    },
+    "HouseholdTask": {
+      "title": "HouseholdTask",
+      "description": "Home chore or maintenance task",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "assignedToName": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "recurring": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "isCompleted", "createdAt"]
+    },
+    "FamilyOccasion": {
+      "title": "FamilyOccasion",
+      "description": "Family birthday or anniversary",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "type": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "date", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User private profile and preferences"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "WorkTask",
+      "description": "User work tasks collection"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "FinancialTransaction",
+      "description": "User financial transactions collection"
+    },
+    "/users/{userId}/bills/{billId}": {
+      "schema": "UtilityBill",
+      "description": "User utility bills collection"
+    },
+    "/users/{userId}/shopping_items/{itemId}": {
+      "schema": "ShoppingItem",
+      "description": "User grocery and shopping items"
+    },
+    "/users/{userId}/children/{childId}": {
+      "schema": "ChildProfile",
+      "description": "User children education profiles"
+    },
+    "/users/{userId}/homework/{homeworkId}": {
+      "schema": "Homework",
+      "description": "Children school homework"
+    },
+    "/users/{userId}/exams/{examId}": {
+      "schema": "Exam",
+      "description": "Children exams schedule"
+    },
+    "/users/{userId}/household_tasks/{householdTaskId}": {
+      "schema": "HouseholdTask",
+      "description": "Household chores and duties"
+    },
+    "/users/{userId}/occasions/{occasionId}": {
+      "schema": "FamilyOccasion",
+      "description": "Family occasions and events"
+    }
+  }
+}

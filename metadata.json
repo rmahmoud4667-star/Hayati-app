@@ -1,0 +1,6 @@
+{
+  "name": "حياتي AI",
+  "description": "مساعدك اليومي الذكي لتنظيم العمل والمنزل والأسرة والمال وتعليم الأبناء",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

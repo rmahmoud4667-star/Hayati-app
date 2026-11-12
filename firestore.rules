@@ -1,0 +1,315 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity Validation Helpers
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidWorkTask(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (!('priority' in data) || (data.priority in ['HIGH', 'MEDIUM', 'LOW'])) &&
+             data.dueDate is string && data.dueDate.size() <= 20 &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('status' in data) || (data.status in ['PENDING', 'IN_PROGRESS', 'COMPLETED'])) &&
+             data.isCompleted is bool &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidFinancialTransaction(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.type in ['INCOME', 'EXPENSE'] &&
+             data.amount is number && data.amount > 0 && data.amount <= 1000000000 &&
+             data.date is string && data.date.size() <= 20 &&
+             data.category is string && data.category.size() >= 1 && data.category.size() <= 100 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 500)) &&
+             (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 100)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidUtilityBill(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             (!('billNumber' in data) || (data.billNumber is string && data.billNumber.size() <= 100)) &&
+             data.amount is number && data.amount >= 0 && data.amount <= 100000000 &&
+             data.dueDate is string && data.dueDate.size() <= 20 &&
+             data.isPaid is bool &&
+             (!('paidDate' in data) || data.paidDate == null || (data.paidDate is string && data.paidDate.size() <= 20)) &&
+             (!('iconName' in data) || (data.iconName is string && data.iconName.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidShoppingItem(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 150 &&
+             (!('quantity' in data) || (data.quantity is string && data.quantity.size() <= 50)) &&
+             (!('estimatedPrice' in data) || (data.estimatedPrice is number && data.estimatedPrice >= 0)) &&
+             data.isPurchased is bool &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 100)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidChildProfile(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+             data.grade is string && data.grade.size() <= 100 &&
+             (!('school' in data) || (data.school is string && data.school.size() <= 150)) &&
+             (!('avatarEmoji' in data) || (data.avatarEmoji is string && data.avatarEmoji.size() <= 20)) &&
+             (!('subjects' in data) || (data.subjects is list && data.subjects.size() <= 30 && (data.subjects.size() == 0 || data.subjects[0] is string))) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidHomework(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.childId is string && data.childId.size() <= 128 &&
+             (!('childName' in data) || (data.childName is string && data.childName.size() <= 100)) &&
+             data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 100 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             data.dueDate is string && data.dueDate.size() <= 20 &&
+             data.isCompleted is bool &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidExam(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.childId is string && data.childId.size() <= 128 &&
+             (!('childName' in data) || (data.childName is string && data.childName.size() <= 100)) &&
+             data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 100 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.examDate is string && data.examDate.size() <= 20 &&
+             (!('maxScore' in data) || (data.maxScore is int && data.maxScore > 0 && data.maxScore <= 10000)) &&
+             (!('scoreAchieved' in data) || data.scoreAchieved == null || (data.scoreAchieved is int && data.scoreAchieved >= 0)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidHouseholdTask(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             (!('assignedToName' in data) || (data.assignedToName is string && data.assignedToName.size() <= 100)) &&
+             (!('dueDate' in data) || (data.dueDate is string && data.dueDate.size() <= 20)) &&
+             data.isCompleted is bool &&
+             (!('recurring' in data) || (data.recurring is string && data.recurring.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidFamilyOccasion(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.date is string && data.date.size() <= 20 &&
+             (!('type' in data) || (data.type is string && data.type.size() <= 50)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    // User Root and Subcollections
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidUserProfile(incoming());
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'updatedAt']);
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+
+      // Work Tasks
+      match /tasks/{taskId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidWorkTask(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidWorkTask(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'priority', 'dueDate', 'category', 'status', 'isCompleted', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Financial Transactions
+      match /transactions/{transactionId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidFinancialTransaction(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidFinancialTransaction(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['type', 'amount', 'date', 'category', 'description', 'paymentMethod', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Utility Bills
+      match /bills/{billId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidUtilityBill(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidUtilityBill(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'billNumber', 'amount', 'dueDate', 'isPaid', 'paidDate', 'iconName', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Shopping Items
+      match /shopping_items/{itemId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidShoppingItem(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidShoppingItem(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'quantity', 'estimatedPrice', 'isPurchased', 'category', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Children Profiles
+      match /children/{childId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidChildProfile(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidChildProfile(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'grade', 'school', 'avatarEmoji', 'subjects', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Homework
+      match /homework/{homeworkId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidHomework(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidHomework(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['childId', 'childName', 'subject', 'title', 'description', 'dueDate', 'isCompleted', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Exams
+      match /exams/{examId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidExam(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidExam(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['childId', 'childName', 'subject', 'title', 'examDate', 'maxScore', 'scoreAchieved', 'notes', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Household Tasks
+      match /household_tasks/{householdTaskId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidHouseholdTask(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidHouseholdTask(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'assignedToName', 'dueDate', 'isCompleted', 'recurring', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+
+      // Family Occasions
+      match /occasions/{occasionId} {
+        allow get, list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidFamilyOccasion(incoming());
+        allow update: if isSignedIn() &&
+                         request.auth.uid == userId &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidFamilyOccasion(incoming()) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'date', 'type', 'notes', 'updatedAt']);
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+  }
+}
